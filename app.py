@@ -13,16 +13,19 @@ st.set_page_config(
 )
 
 # ── Landing page ──────────────────────────────────────────────────────────────
+if "user_name" not in st.session_state:
+    st.session_state.user_name = None
+
 if not st.session_state.user_name:
     st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap');
+
         html, body, [data-testid="stAppViewContainer"] {
             background: #0a0a0f;
             color: #e8e6e3;
             font-family: 'DM Mono', monospace;
         }
-        [data-testid="stSidebar"] { display: none !important; }
         .login-container {
             display: flex;
             flex-direction: column;
@@ -80,22 +83,20 @@ if not st.session_state.user_name:
             transform: translateY(-1px) !important;
             box-shadow: 0 8px 24px rgba(124, 111, 255, 0.35) !important;
         }
-        #MainMenu, footer { visibility: hidden; }
     </style>
     <div class="login-container">
         <div class="login-title">KnowledgeBase<br>AI</div>
         <div class="login-sub">no google. no passwords. just your name and some vectors.</div>
     </div>
     """, unsafe_allow_html=True)
- 
+
     col1, col2, col3 = st.columns([1, 0.6, 1])
     with col2:
         name = st.text_input("", placeholder="what's your name?", label_visibility="collapsed")
-        enter = st.button("🧠 Enter the Brain", use_container_width=True)
-        if enter:
+        if st.button("🧠 Enter the Brain", use_container_width=True):
             if name.strip():
                 st.session_state.user_name = name.strip().lower().replace(" ", "_")
-                # No st.rerun() — st.stop() releases and next natural rerun picks up the new state
+                st.rerun()
             else:
                 st.error("please enter your name first!")
     st.stop()
