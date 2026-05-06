@@ -13,10 +13,10 @@ st.set_page_config(
 )
 
 # ── Landing page ──────────────────────────────────────────────────────────────
-if "entered" not in st.session_state:
-    st.session_state.entered = False
+if "user_name" not in st.session_state:
+    st.session_state.user_name = None
 
-if not st.session_state.entered:
+if not st.session_state.user_name:
     st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap');
@@ -52,6 +52,20 @@ if not st.session_state.entered:
             text-align: center;
             letter-spacing: 0.05em;
         }
+        .stTextInput > div > input {
+            background: #0f0f17 !important;
+            border: 1px solid #1e1e2e !important;
+            border-radius: 6px !important;
+            color: #e8e6e3 !important;
+            font-family: 'DM Mono', monospace !important;
+            font-size: 0.9rem !important;
+            text-align: center !important;
+            padding: 0.75rem !important;
+        }
+        .stTextInput > div > input:focus {
+            border-color: #7c6fff !important;
+            box-shadow: 0 0 0 2px rgba(124,111,255,0.2) !important;
+        }
         .stButton > button {
             background: #7c6fff !important;
             color: #fff !important;
@@ -72,19 +86,23 @@ if not st.session_state.entered:
     </style>
     <div class="login-container">
         <div class="login-title">KnowledgeBase<br>AI</div>
-        <div class="login-sub">no google. no passwords. just vibes and vectors.</div>
+        <div class="login-sub">no google. no passwords. just your name and some vectors.</div>
     </div>
     """, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1, 0.5, 1])
+    col1, col2, col3 = st.columns([1, 0.6, 1])
     with col2:
+        name = st.text_input("", placeholder="what's your name?", label_visibility="collapsed")
         if st.button("🧠 Enter the Brain", use_container_width=True):
-            st.session_state.entered = True
-            st.rerun()
+            if name.strip():
+                st.session_state.user_name = name.strip().lower().replace(" ", "_")
+                st.rerun()
+            else:
+                st.error("please enter your name first!")
     st.stop()
 
-# ── User (no auth, demo mode) ─────────────────────────────────────────────────
-user_email = "demo@knowledgebase.ai"
+# ── User (name-based session) ─────────────────────────────────────────────────
+user_email = f"{st.session_state.user_name}@knowledgebase.ai"
 ensure_user(user_email)
 
 # ── Global CSS ────────────────────────────────────────────────────────────────
@@ -236,7 +254,7 @@ if "doc_loaded" not in st.session_state:
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown('<div class="kb-header">🧠 KB·AI</div>', unsafe_allow_html=True)
-    st.markdown('<div class="kb-context-label">demo mode · no login needed</div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="kb-context-label">hey, {st.session_state.user_name} 👋</div>', unsafe_allow_html=True)
     st.divider()
 
     # Upload
@@ -306,7 +324,7 @@ with st.sidebar:
 
     st.divider()
     if st.button("🚪 Exit Brain", use_container_width=True):
-        st.session_state.entered = False
+        st.session_state.user_name = None
         st.session_state.messages = []
         st.session_state.active_doc = None
         st.session_state.doc_loaded = False
