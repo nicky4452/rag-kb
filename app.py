@@ -12,9 +12,11 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ── Auth ──────────────────────────────────────────────────────────────────────
-# Resolve auth before any rendering to avoid login flash
-if not st.user.is_logged_in:
+# ── Landing page ──────────────────────────────────────────────────────────────
+if "entered" not in st.session_state:
+    st.session_state.entered = False
+
+if not st.session_state.entered:
     st.markdown("""
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap');
@@ -49,7 +51,6 @@ if not st.user.is_logged_in:
             color: #6b6873;
             text-align: center;
             letter-spacing: 0.05em;
-            text-transform: uppercase;
         }
         .stButton > button {
             background: #7c6fff !important;
@@ -71,17 +72,19 @@ if not st.user.is_logged_in:
     </style>
     <div class="login-container">
         <div class="login-title">KnowledgeBase<br>AI</div>
-        <div class="login-sub">Chat with your documents using RAG</div>
+        <div class="login-sub">no google. no passwords. just vibes and vectors.</div>
     </div>
     """, unsafe_allow_html=True)
 
-    col1, col2, col3 = st.columns([1, 0.4, 1])
+    col1, col2, col3 = st.columns([1, 0.5, 1])
     with col2:
-        if st.button("Sign in with Google", use_container_width=True):
-            st.login()
+        if st.button("🧠 Enter the Brain", use_container_width=True):
+            st.session_state.entered = True
+            st.rerun()
     st.stop()
 
-user_email = st.user.email
+# ── User (no auth, demo mode) ─────────────────────────────────────────────────
+user_email = "demo@knowledgebase.ai"
 ensure_user(user_email)
 
 # ── Global CSS ────────────────────────────────────────────────────────────────
@@ -233,7 +236,7 @@ if "doc_loaded" not in st.session_state:
 # ── Sidebar ───────────────────────────────────────────────────────────────────
 with st.sidebar:
     st.markdown('<div class="kb-header">🧠 KB·AI</div>', unsafe_allow_html=True)
-    st.markdown(f'<div class="kb-context-label">{user_email}</div>', unsafe_allow_html=True)
+    st.markdown('<div class="kb-context-label">demo mode · no login needed</div>', unsafe_allow_html=True)
     st.divider()
 
     # Upload
@@ -302,8 +305,12 @@ with st.sidebar:
         st.caption("No documents yet. Upload one above.")
 
     st.divider()
-    if st.button("Sign out", use_container_width=True):
-        st.logout()
+    if st.button("🚪 Exit Brain", use_container_width=True):
+        st.session_state.entered = False
+        st.session_state.messages = []
+        st.session_state.active_doc = None
+        st.session_state.doc_loaded = False
+        st.rerun()
 
 # ── Main area ─────────────────────────────────────────────────────────────────
 if not st.session_state.active_doc:
@@ -347,7 +354,6 @@ for msg in st.session_state.messages:
 
 # ── Chat input ────────────────────────────────────────────────────────────────
 if prompt := st.chat_input(f"Ask about {st.session_state.active_doc}…"):
-    # Append user message immediately (no rerun)
     st.session_state.messages.append({"role": "user", "content": prompt})
     save_message(user_email, st.session_state.active_doc, "user", prompt)
 
@@ -372,7 +378,6 @@ if prompt := st.chat_input(f"Ask about {st.session_state.active_doc}…"):
                     st.markdown(f"**Chunk {i}** · score `{src['score']:.3f}`")
                     st.caption(src["text"][:400] + "…")
 
-    # Save assistant message
     assistant_msg = {"role": "assistant", "content": answer, "sources": sources}
     st.session_state.messages.append(assistant_msg)
     save_message(user_email, st.session_state.active_doc, "assistant", answer)
